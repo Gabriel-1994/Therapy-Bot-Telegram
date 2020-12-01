@@ -3,8 +3,8 @@ import pymysql
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="password",
-    db="questions",
+    password="1234",
+    db="sql_intro",
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )
@@ -18,6 +18,21 @@ def add_user(id,name,location,health,q_counter):#*args?
              VALUES (%s,%s,%s,%s,%s)"""
              cursor.execute(query,(id,name,location,health,q_counter, ))
              connection.commit()
+    except:
+        result = "ERROR connecting to DATABASE"
+    return result
+
+def search_user(id):#*args?
+    try:
+         with connection.cursor() as cursor:
+             query=""" SELECT * FROM userinfo WHERE userid = %s"""
+             cursor.execute(query,(id, ))
+             connection.commit()
+             result=cursor.fetchone()
+             if result:
+                 return True
+             else:
+                 return False
     except:
         result = "ERROR connecting to DATABASE"
     return result
@@ -58,19 +73,19 @@ def fetch_activity(userid):#adding another activity
     try:
         with connection.cursor() as cursor:
             query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
-            cursor.execute(query,(userid,activity, ))
+            cursor.execute(query,(userid, ))
             result=cursor.fetchone()
     except:
         result = "ERROR connecting to DATABASE"
     return result
 
-def update_question_counter(userid):#adding another activity
+
+def update_question_counter(userid, q_counter):
     try:
         with connection.cursor() as cursor:
-            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
-            cursor.execute(query,(userid,activity, ))
-            result=cursor.fetchone()
+            query=""" UPDATE userinfo set quest_counter=%s WHERE userid=%s """
+            cursor.execute(query,(q_counter,userid, ))
+            connection.commit()
     except:
         result = "ERROR connecting to DATABASE"
     return result
-

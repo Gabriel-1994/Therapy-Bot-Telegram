@@ -5,6 +5,9 @@
  -- question VARCHAR(350) NOT NULL
  -- );
  -- CATEGORY 1
+ 
+ use sql_intro;
+ 
  INSERT INTO questions (categoryid, category, question)
  VALUES (1, "intro", "What brings you here?");
  

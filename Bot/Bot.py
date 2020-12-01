@@ -15,6 +15,9 @@ class Bot:
         self.handlers[handler_name] = handler
     
     def action(self,args,chat_id, data):
+        hobbies = ['Video games', 'Movies', 'Sports', 'Cooking']
+        if data['message']['text'] in hobbies:
+            self.handlers.get("/hobbies")(args, chat_id, data)
         try:
             self.handlers.get(args[0])(args, chat_id, data)
         except:
@@ -24,4 +27,5 @@ class Bot:
 def get_bot():
     bot = Bot()
     bot.add_handler("/sign_up", get_personal_data_handler)
+    bot.add_handler("/hobbies", add_hobbies_handler)
     return bot

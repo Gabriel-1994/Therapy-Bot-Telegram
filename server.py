@@ -15,7 +15,7 @@ def message_handler():
     print(chat_id)
 
     bot.action(args,chat_id,request.get_json())
-        
+    
     return Response("Server is up and running smoothly")
 
 
