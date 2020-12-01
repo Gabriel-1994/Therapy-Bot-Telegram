@@ -2,11 +2,11 @@ from flask import Flask, Response, request
 from config import *
 import requests
 from Bot.Bot import *
-import json
-
-
+from analyzer import analyze_text
+from recipe import get_recipes
 
 app = Flask(__name__)
+
 
 @app.route('/message', methods=["POST"])
 def message_handler():
@@ -22,5 +22,4 @@ def message_handler():
 
 if __name__ == '__main__':
     requests.get(TELEGRAM_INIT_URL)
-    bot = get_bot()
     app.run(port=5003)
