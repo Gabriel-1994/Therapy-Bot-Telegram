@@ -1,6 +1,7 @@
 from config import TELEGRAM_TOKEN
 from flask import Response
 import requests
+import time
 from telebot import types
 import json
 import DatabaseAPI.userinfoAPI as userAPI
@@ -22,7 +23,7 @@ def build_menu(buttons,n_cols,header_buttons=None,footer_buttons=None):
 def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
         """ not first time user """
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back" + data.get('message').get('from').get('first_name')))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back " + data.get('message').get('from').get('first_name')))
         start_session(chat_id)
 
     #/sign_up
@@ -43,25 +44,30 @@ def hobbies_handler(args, chat_id, data):
     requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Please reply with your hobbies\n",reply_markup))
 
 def add_hobbies_handler(args, chat_id, data):
+    print("IN HOBBIES HANDLER")
     userAPI.add_activity(chat_id,data['message']['text'])
 
 # /session 
 def start_session(args, chat_id, data):
-    user_question_place = get_place(chat_id)
-
+    user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
+    print(user_question_place, " hello", type(user_question_place))
     if user_question_place == 1: ## the first_question
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "welecome to our session"))
+        time.sleep(0.5)
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "this session is secret so dont worry no one will know anything about it"))
+        time.sleep(0.5)
+
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Lets Start"))
     
     else:
         """Analyze_what the user typed"""
 
-    question = get_rand_question_based_on_cata(user_question_place)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "First_Question<question>"))
-    user_question_place +=1
-    update_place_in_dataBase(chat_id)
+    question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
+    print(question, " hello", type(question))
 
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
+    user_question_place +=1
+    userAPI.update_question_counter(chat_id, user_question_place)
 
 def reply_markup_maker(data):
     keyboard = []

@@ -3,8 +3,8 @@ import pymysql
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="password",
-    db="questions",
+    password="1234",
+    db="sql_intro",
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )

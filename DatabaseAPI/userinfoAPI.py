@@ -3,8 +3,8 @@ import pymysql
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="password",
-    db="questions",
+    password="1234",
+    db="sql_intro",
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )
@@ -75,6 +75,17 @@ def fetch_activity(userid):#adding another activity
         result = "ERROR connecting to DATABASE"
     return result
 
+def fetch_Qcounter(userid):#adding another activity
+    try:
+        with connection.cursor() as cursor:
+            query=""" SELECT quest_counter FROM userinfo WHERE userid=%s """
+            cursor.execute(query,(userid, ))
+            result=cursor.fetchone()
+    except:
+        result = "ERROR connecting to DATABASE"
+    return result
+
+    
 def update_question_counter(userid, q_counter):
     try:
         with connection.cursor() as cursor:
