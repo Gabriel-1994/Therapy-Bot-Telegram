@@ -12,6 +12,9 @@ class Bot:
     def send_message(self,chat_id,message):
         requests.get(Bot.RES.format(TELEGRAM_TOKEN, chat_id, message))
 
+    def respond_to_message(self,chat_id, msg_id, message):
+        requests.get(Bot.RES.format(TELEGRAM_TOKEN, chat_id, message))                
+
     
     def add_handler(self, handler_name,handler):
         self.handlers[handler_name] = handler

@@ -14,18 +14,18 @@ def message_handler():
 
     #print(request.get_json())    
     #bot.send_message(chat_id, "Hi, What's your location? Preferably the name of the city and country. Thank you")
-    
+    """
     txt = request.get_json()['message'].get("text")
 
     weather = "https://api.weatherbit.io/v2.0/current?city={}&key={}"
     temp = requests.get(weather.format(txt, WEATHER_TOKEN))
     bot.send_message(chat_id, "The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees")
-    
+    """
 
+    joke = requests.get("https://official-joke-api.appspot.com/jokes/general/random")    
+    bot.send_message(chat_id, joke.json()[0].get("setup"))
 
-    
-
-
+    bot.send_message(chat_id, joke.json()[0].get("punchline"))
 
     return Response("Server is up and running smoothly")
 
