@@ -6,17 +6,17 @@ def analyze_text(text):
     paralleldots.set_api_key(paralleldots_TOKEN)
     paralleldots.get_api_key()
     emotions = paralleldots.emotion(text)["emotion"]
-    pos = (emotions["Happy"] + emotions["Excited"]) / 2
-    neg = (emotions["Angry"] + emotions["Bored"] + emotions["Fear"] + emotions["Sad"]) / 4
-    return pos, neg
+    pos = (emotions["Happy"] + emotions["Excited"]) 
+    return pos
 
 
 def compare_mood(prev, now):
-    positive = 0
-    negative = 1
-    if prev[positive] < now[positive] and prev[negative] > now[negative]:
+    
+    pre_neg = 1 - prev
+    now_neg = 1 - now
+    if prev < now and pre_neg > now_neg:
         return "better"
-    elif prev[positive] < now[positive] and prev[negative] > now[negative]:
+    elif prev < now and pre_neg > now_neg:
         return "better positive"
     else:
         return "worse"
@@ -31,4 +31,4 @@ def analyze_text_w(text):
     print(pos, " ", neg)
 
 
-analyze_text_w("hello love")
+

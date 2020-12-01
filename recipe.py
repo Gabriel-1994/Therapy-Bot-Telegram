@@ -15,4 +15,4 @@ def get_recipes(ingredients):
     return res_str
 
 
-print(get_recipes("rice,mango"))
+

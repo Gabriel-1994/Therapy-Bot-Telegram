@@ -21,11 +21,11 @@ def add_user(id,name,location,health,q_counter):#*args?
     except:
         return "ERROR connecting to DATABASE"
 
-def search_user(id):#*args?
+def search_user(user_id):#*args?
     try:
          with connection.cursor() as cursor:
              query=""" SELECT * FROM userinfo WHERE userid = %s"""
-             cursor.execute(query,(id, ))
+             cursor.execute(query,(user_id, ))
              connection.commit()
              result=cursor.fetchone()
              if result:
@@ -37,21 +37,31 @@ def search_user(id):#*args?
     return result
 
 
-def update_health_status(id,health):#update by id or name
+def update_health_status(user_id,health):#update by id or name
     try:
         with connection.cursor() as cursor:
-            query=""" UPDATE userinfo set health=%s WHERE userid= %s """
-            cursor.execute(query,(id,health, ))
+            query=""" UPDATE userinfo set health=%s WHERE userid=%s """
+            cursor.execute(query,(health,user_id, ))
             connection.commit()
     except:
         return "ERROR connecting to DATABASE"
 
+def fetch_health_status(userid):#adding another activity
+    try:
+        with connection.cursor() as cursor:
+            query=""" SELECT health FROM userinfo WHERE userid=%s"""
+            cursor.execute(query,(userid, ))
+            result=cursor.fetchone()
+    except:
+        result = "ERROR connecting to DATABASE"
+    return float(result.get('health'))
 
-def update_location(id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
+
+def update_location(user_id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
     try:
         with connection.cursor() as cursor:
             query=""" UPDATE userinfo set location=%s WHERE userid= %s """
-            cursor.execute(query,(id,location, ))
+            cursor.execute(query,(user_id,location, ))
             connection.commit()
     except:
        return "ERROR connecting to DATABASE"

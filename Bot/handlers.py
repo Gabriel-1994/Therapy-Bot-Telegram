@@ -6,6 +6,7 @@ from telebot import types
 import json
 import DatabaseAPI.userinfoAPI as userAPI
 import DatabaseAPI.questionsAPI as qAPI
+import analyzer
 RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=Markdown"
 
 
@@ -25,7 +26,6 @@ def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
         """ not first time user """
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back " + data.get('message').get('from').get('first_name')))
-        start_session(chat_id)
 
     #/sign_up
     else:
@@ -34,7 +34,7 @@ def get_personal_data_handler(args, chat_id, data):
         last_name = data.get('message').get('from').get('last_name')
         user_id = chat_id
         user_place = 1
-        userAPI.add_user(user_id, first_name + " " +  last_name, "Jerusalem", None, user_place)
+        userAPI.add_user(user_id, first_name + " " +  last_name, "Jerusalem", 0, user_place)
         hobbies_handler(args, chat_id, data)
         
 
@@ -51,7 +51,6 @@ def add_hobbies_handler(args, chat_id, data):
 # /session 
 def start_session(args, chat_id, data):
     user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
-    print(user_question_place, " hello", type(user_question_place))
     if user_question_place == 1: ## the first_question
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "welecome to our session"))
         time.sleep(0.5)
@@ -61,10 +60,19 @@ def start_session(args, chat_id, data):
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Lets Start"))
     
     else:
-        """Analyze_what the user typed"""
+        """Analyze what the user typed"""
+        pre_health = userAPI.fetch_health_status(chat_id)
+        curr_health = analyzer.analyze_text(data['message']['text'])
+
+        status = analyzer.compare_mood(pre_health, curr_health)
+        
+
+        userAPI.update_health_status(chat_id, curr_health)
+        
+
+
 
     question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
-    print(question, " hello", type(question))
 
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
     user_question_place +=1
@@ -81,6 +89,5 @@ def reply_markup_maker(data):
             pass
         keyboard.append(key)
     reply_markup = {"keyboard":keyboard, "one_time_keyboard": True}
-    print(reply_markup)
     return json.dumps(reply_markup)
 
