@@ -8,15 +8,6 @@ RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=
 
 
 
-
-def build_menu(buttons,n_cols,header_buttons=None,footer_buttons=None):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(0, header_buttons)
-    if footer_buttons:
-        menu.append(footer_buttons)
-    return menu
-
 # "/sign_up"
 def get_personal_data_handler(args, chat_id, data):
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi there " + data.get('message').get('from').get('first_name')))
