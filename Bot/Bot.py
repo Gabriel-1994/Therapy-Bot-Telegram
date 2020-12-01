@@ -1,6 +1,7 @@
 from config import TELEGRAM_TOKEN
 import requests
 
+
 class Bot:
     RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
 
