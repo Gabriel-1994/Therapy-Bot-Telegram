@@ -37,7 +37,7 @@ def update_health_status(id,health):#update by id or name
 def update_location(id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
     try:
         with connection.cursor() as cursor:
-            query=""" UPDATE userino set location=%s WHERE userid= %s """
+            query=""" UPDATE userinfo set location=%s WHERE userid= %s """
             cursor.execute(query,(id,location, ))
             connection.commit()
     except:
@@ -64,12 +64,12 @@ def fetch_activity(userid):#adding another activity
         result = "ERROR connecting to DATABASE"
     return result
 
-def update_question_counter(userid):#adding another activity
+def update_question_counter(userid, q_counter):
     try:
         with connection.cursor() as cursor:
-            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
-            cursor.execute(query,(userid,activity, ))
-            result=cursor.fetchone()
+            query=""" UPDATE userinfo set quest_counter=%s WHERE userid=%s """
+            cursor.execute(query,(q_counter,userid, ))
+            connection.commit()
     except:
         result = "ERROR connecting to DATABASE"
     return result
