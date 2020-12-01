@@ -37,23 +37,21 @@ def get_personal_data_handler(args, chat_id, data):
 
 
 # /session 
-def starrt_session(args, chat_id, data):
-    user_place = get_place()
+def start_session(args, chat_id, data):
+    user_question_place = get_place(chat_id)
 
-    if user_place == 1: ## the first_question
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "welecome to our session")
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "this session is secret so dont worry no one will know anything about it")
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Lets Start")
+    if user_question_place == 1: ## the first_question
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "welecome to our session"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "this session is secret so dont worry no one will know anything about it"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Lets Start"))
     
     else:
         """Analyze_what the user typed"""
 
-    question = get_rand_question_based_on_cata(user_place)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "First_Question<question>")
-    user_place +=1
+    question = get_rand_question_based_on_cata(user_question_place)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "First_Question<question>"))
+    user_question_place +=1
     update_place_in_dataBase(chat_id)
-
-    pass
 
 
 def reply_markup_maker(data):
