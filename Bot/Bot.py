@@ -1,4 +1,3 @@
-
 from config import TELEGRAM_TOKEN
 import requests
 from Bot.handlers import *
