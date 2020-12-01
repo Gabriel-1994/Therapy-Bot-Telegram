@@ -18,13 +18,3 @@ def prime_handler(args, chat_id):
 
     return Response("Server is up and running smoothly")
 
-def is_prime(num):
-    if num > 1:
-        for i in range(2, num//2):
-            if (num % i) == 0:
-                print(num, "is not a prime number")
-                return False
-        else:
-            return True
-    else:
-        return False
