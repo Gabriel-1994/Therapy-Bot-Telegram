@@ -1,6 +1,7 @@
 
 from config import TELEGRAM_TOKEN
 import requests
+from flask import request
 from Bot.handlers import *
 
 class Bot:
@@ -14,9 +15,9 @@ class Bot:
     
     def add_handler(self, handler_name,handler):
         self.handlers[handler_name] = handler
-    
+        
     def action(self,args,chat_id):
-        self.handlers.get(args[0])(args,chat_id)
+        pass
 
 
 def get_bot():
