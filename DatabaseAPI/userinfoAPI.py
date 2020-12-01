@@ -19,6 +19,20 @@ def add_user(id,name,location,health,q_counter):#*args?
              cursor.execute(query,(id,name,location,health,q_counter, ))
              connection.commit()
     except:
+        return "ERROR connecting to DATABASE"
+
+def search_user(id):#*args?
+    try:
+         with connection.cursor() as cursor:
+             query=""" SELECT * FROM userinfo WHERE userid = %s"""
+             cursor.execute(query,(id, ))
+             connection.commit()
+             result=cursor.fetchone()
+             if result:
+                 return True
+             else:
+                 return False
+    except:
         result = "ERROR connecting to DATABASE"
     return result
 
@@ -30,8 +44,7 @@ def update_health_status(id,health):#update by id or name
             cursor.execute(query,(id,health, ))
             connection.commit()
     except:
-        result = "ERROR connecting to DATABASE"
-    return result
+        return "ERROR connecting to DATABASE"
 
 
 def update_location(id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
@@ -41,8 +54,7 @@ def update_location(id,location):#beginning of every sesssion we can ask where h
             cursor.execute(query,(id,location, ))
             connection.commit()
     except:
-        result = "ERROR connecting to DATABASE"
-    return result
+       return "ERROR connecting to DATABASE"
 
 def add_activity(userid,activity):#adding another activity
     try:
@@ -51,14 +63,13 @@ def add_activity(userid,activity):#adding another activity
             cursor.execute(query,(userid,activity, ))
             connection.commit()
     except:
-        result = "ERROR connecting to DATABASE"
-    return result
+        return "ERROR connecting to DATABASE"
 
 def fetch_activity(userid):#adding another activity
     try:
         with connection.cursor() as cursor:
             query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
-            cursor.execute(query,(userid,activity, ))
+            cursor.execute(query,(userid, ))
             result=cursor.fetchone()
     except:
         result = "ERROR connecting to DATABASE"
@@ -71,6 +82,4 @@ def update_question_counter(userid, q_counter):
             cursor.execute(query,(q_counter,userid, ))
             connection.commit()
     except:
-        result = "ERROR connecting to DATABASE"
-    return result
-
+        return "ERROR connecting to DATABASE"

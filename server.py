@@ -6,16 +6,16 @@ import json
 
 
 
-app = Flask(__name__, static_url_path='', static_folder='dist')
+app = Flask(__name__)
 
 @app.route('/message', methods=["POST"])
 def message_handler():
     args = request.get_json()['message']['text'].split()
     chat_id = request.get_json()['message']['chat']['id']
+    print(chat_id)
 
-    bot.action(args,chat_id)
-    print(request.get_json())
-        
+    bot.action(args,chat_id,request.get_json())
+    
     return Response("Server is up and running smoothly")
 
 
@@ -23,4 +23,4 @@ def message_handler():
 if __name__ == '__main__':
     requests.get(TELEGRAM_INIT_URL)
     bot = get_bot()
-    app.run(port=5003)
+    app.run(port=5002)
