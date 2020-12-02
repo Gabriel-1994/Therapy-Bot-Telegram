@@ -1,4 +1,4 @@
-from config import TELEGRAM_TOKEN
+from config import *
 from flask import Response
 import requests
 import time
@@ -15,8 +15,9 @@ RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=
 # "/start"
 def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
-        # not first time user 
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back " + data.get('message').get('from').get('first_name')))
+        """ not first time user """
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welcome Back " + data.get('message').get('from').get('first_name')))
+        userAPI.update_question_counter(chat_id,1)
 
 
     else:
@@ -72,15 +73,83 @@ def start_session(args, chat_id, data):
         curr_health = analyzer.analyze_text(data['message']['text'])
 
         status = analyzer.compare_mood(pre_health, curr_health)
-        
+    
 
         userAPI.update_health_status(chat_id, curr_health)
         
+
     question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
 
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
     user_question_place +=1
     userAPI.update_question_counter(chat_id, user_question_place)
+
+   
+
+
+def suggest_activity(args, chat_id, data):
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "It was nice chatting with you today at our session"))
+    time.sleep(1)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here are some suggestions for activites to do that can help you to be in a better mood"))
+    time.sleep(1)
+    activity=userAPI.fetch_activity(chat_id).get("activity")
+    print(activity)
+    if activity=='Sports':
+        suggest_sport(activity,chat_id)
+    elif activity=='Movies':
+        suggest_movies(activity,chat_id)
+    elif activity=='Cooking':
+        suggest_recipe(activity,args,chat_id,data)
+    elif activity=='--':
+        suggest_sport(activity)
+    
+     
+
+def suggest_sport(activity,chat_id):
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you go out and do some " + activity))
+    weather = "https://api.weatherbit.io/v2.0/current?city=Jerusalem&key={}"
+    temp = requests.get(weather.format(WEATHER_TOKEN))
+    weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees "+temp.json()["data"][0]["weather"]["description"]
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id,weather_msg))
+
+def suggest_movies(activity,chat_id):
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you watch some " + activity))
+    movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=35&primary_release_date.gte=2015-01-01&primary_release_date.lte=2015-12-31&with_original_language=en"
+    comedy = requests.get(movies.format(MOVIES_TOKEN))
+    movies_list = ""
+    for i in range(10):    
+        movies_list += "\t" + (comedy.json()["results"][i]["title"])+" \n\n"
+    movies_msg="Here are the top comedy movies that will definitely to cheer you up! \n" + movies_list
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, movies_msg))  
+
+def suggest_recipe(activity,args, chat_id, data):
+    
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love" + activity+ " We can suggest a few of our top recipes"))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "insert the ingredients you have in one line splitted by commas"))
+    userAPI.update_question_counter(chat_id,-1)
+    return
+
+    
+def getIngredient(args,chat_id,data):
+    ingredients=data['message']['text']    
+    api_url = "http://www.recipepuppy.com/api/?i={}"
+    recipes = requests.get(api_url.format(ingredients)).json()["results"]
+    res_str = ""
+
+    if len(recipes) == 0:
+        return "No match"
+
+    for r in recipes:
+        res_str += "Title: " + r["title"] + "\n\tLink: " + r["href"] + "\n\tIngredients: " + r["ingredients"] + "\n\n"
+        
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here are our top recipes based on your ingredients: \n" + res_str ))   
+    userAPI.update_question_counter(chat_id,8) # 8 = Goodbye messge feature
+
+
+
+     
+
+
 
 
 def reply_markup_maker(data):
