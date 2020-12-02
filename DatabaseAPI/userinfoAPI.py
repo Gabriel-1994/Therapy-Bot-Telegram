@@ -1,10 +1,11 @@
 import pymysql
+from config import DB, DB_password
 
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="Bandi4434!!!",
-    db="sql_testing",
+    password=DB_password,
+    db=DB,
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )
@@ -78,7 +79,18 @@ def add_activity(userid,activity):#adding another activity
 def fetch_activity(userid):#adding another activity
     try:
         with connection.cursor() as cursor:
-            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
+            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND()"""
+            cursor.execute(query,(userid, ))
+            result=cursor.fetchall()
+    except:
+        result = "ERROR connecting to DATABASE"
+    return result
+
+
+def fetch_one_activity(userid):#adding another activity
+    try:
+        with connection.cursor() as cursor:
+            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND()"""
             cursor.execute(query,(userid, ))
             result=cursor.fetchone()
     except:

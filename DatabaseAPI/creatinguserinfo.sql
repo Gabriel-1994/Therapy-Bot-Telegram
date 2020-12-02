@@ -1,5 +1,3 @@
-use sql_testing;
-
 CREATE TABLE userinfo (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     userid INT UNSIGNED,
@@ -8,3 +6,5 @@ CREATE TABLE userinfo (
     health float,
     quest_counter INT
  );
+
+ 
