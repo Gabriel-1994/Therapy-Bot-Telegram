@@ -2,15 +2,17 @@ from flask import Flask, Response, request
 from config import *
 import requests
 from Bot.Bot import *
+from analyzer import analyze_text
+from recipe import get_recipes
 import json
 
 
+app = Flask(__name__)
 
-app = Flask(__name__, static_url_path='', static_folder='dist')
 
 @app.route('/message', methods=["POST"])
 def message_handler():
-    chat_id = request.get_json()['message']['chat']['id']
+    #chat_id = request.get_json()['message']['chat']['id']
 
     #print(request.get_json())    
     #bot.send_message(chat_id, "Hi, What's your location? Preferably the name of the city and country. Thank you")
@@ -21,15 +23,15 @@ def message_handler():
     temp = requests.get(weather.format(txt, WEATHER_TOKEN))
     bot.send_message(chat_id, "The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees")
     """
-
-    """ ----- jokes
+    """
+    chat_id = request.get_json()['message']['chat']['id']
     joke = requests.get("https://official-joke-api.appspot.com/jokes/general/random")    
     bot.send_message(chat_id, joke.json()[0].get("setup"))
 
     bot.send_message(chat_id, joke.json()[0].get("punchline"))
     """
 
-    
+    """
     movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=35&primary_release_date.gte=2015-01-01&primary_release_date.lte=2015-12-31&with_original_language=en"
     comedy = requests.get(movies.format(MOVIES_TOKEN))
     movies_list = []
@@ -37,12 +39,29 @@ def message_handler():
         movies_list.append(comedy.json()["results"][i]["title"])
 
     bot.send_message(chat_id, movies_list)            
+    """
+    
+    """
+    args = request.get_json()['message']['text'].split()
+    chat_id = request.get_json()['message']['chat']['id']
+    print(chat_id)    
+    bot.action(args,chat_id,request.get_json())
+    """
+
+    chat_id = request.get_json()['message']['chat']['id']
+    gif = "https://thumbs.gfycat.com/AmazingGiftedGnu-mobile.mp4"
+    bot.send_message(chat_id, gif)
+
+    example_dict ={"mark":13, "steve":3, "bill":6, "linus":11} 
+  
+    print(list(sorted(example_dict.values()))[-2]) 
+
 
     return Response("Server is up and running smoothly")
 
 
 
 if __name__ == '__main__':
-    requests.get(TELEGRAM_INIT_URL)
     bot = get_bot()
+    requests.get(TELEGRAM_INIT_URL)
     app.run(port=5002)
