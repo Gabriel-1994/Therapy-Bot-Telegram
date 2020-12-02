@@ -24,7 +24,9 @@ def get_personal_data_handler(args, chat_id, data):
 
 
     else:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi " + data.get('message').get('from').get('first_name')+" Welcome to MOODIFIER! \nMy goal is to always lighten your mood and give you a safe space to talk about your problems. " ))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi " + data.get('message').get('from').get('first_name') + " Welcome to Moodifier Bot!"))
+        time.sleep(0.5)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "My goal is to always lighten your mood and give you a safe space to talk about your problems."))        
         time.sleep(1.5)
         first_name = data.get('message').get('from').get('first_name')
         last_name = data.get('message').get('from').get('last_name')
@@ -175,6 +177,7 @@ def suggest_activity(args, chat_id, data):
         
 
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Catch you later, Alligator."))
+    time.sleep(1.0)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Please feel free to send me your feedback by typing /feedback <message>"))        
     
     userAPI.update_question_counter(chat_id, 8)
