@@ -17,6 +17,12 @@ class Bot:
         self.handlers[handler_name] = handler
     
     def action(self,args,chat_id, data):
+
+        try:
+            self.handlers.get(args[0])(args, chat_id, data)
+            return
+        except:
+            pass
         
         try:
             user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
@@ -33,16 +39,12 @@ class Bot:
                 self.handlers.get("/location")(args,chat_id,data)
         except:
             pass
-        try:
-            self.handlers.get(args[0])(args, chat_id, data)
-            return
-        except:
-            return
+        
 
 
 def get_bot():
     bot = Bot()
-    bot.add_handler("/sign_up", get_personal_data_handler)
+    bot.add_handler("/start", get_personal_data_handler)
     bot.add_handler("/hobbies", hobbies_handler)
     bot.add_handler("/session", start_session)
     bot.add_handler("/suggest_activity",suggest_activity)

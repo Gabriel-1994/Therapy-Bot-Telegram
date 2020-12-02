@@ -13,9 +13,8 @@ def message_handler():
 
     args = request.get_json()['message']['text'].split()
     chat_id = request.get_json()['message']['chat']['id']
-
     bot.action(args,chat_id,request.get_json())
-    
+
     return Response("Server is up and running smoothly")
 
 

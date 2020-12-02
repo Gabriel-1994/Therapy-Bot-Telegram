@@ -39,7 +39,10 @@ def get_location_handler(args, chat_id, data):
     userAPI.update_question_counter(chat_id,user_place)
     userAPI.update_location(chat_id,location)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Your location is saved, lets start with your hobbies"))
-    hobbies_handler(args, chat_id, data)
+    hobbies = ['Video Games', 'Movies', 'Sports', 'Cooking', "End"]
+    reply_markup = reply_markup_maker(hobbies)
+    requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "choose your hobby..\n",reply_markup))
+
 
 
 def hobbies_handler(args, chat_id, data):
@@ -91,6 +94,7 @@ def start_session(args, chat_id, data):
             requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I'm very happy to hear that you are " + status1))
             user_question_place = 7
             userAPI.update_question_counter(chat_id, user_question_place)
+
             suggest_activity(args, chat_id, data)
             return
 
@@ -169,26 +173,36 @@ def suggest_activity(args, chat_id, data):
      
 
 def suggest_sport(activity,chat_id):
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you go out and do some " + activity))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you do some " + activity))
     weather = "https://api.weatherbit.io/v2.0/current?city=Jerusalem&key={}"
     temp = requests.get(weather.format(WEATHER_TOKEN))
-    weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]
+    temperature = float(temp.json()["data"][0]["temp"])
+    if temperature > 15:
+        weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"] + "\nYou can go out for a run"
+    else:
+        weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,weather_msg))
 
 def suggest_movies(activity,chat_id):    
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you watch some " + activity))
-    movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=35&primary_release_date.gte=2015-01-01&primary_release_date.lte=2015-12-31&with_original_language=en"
+    curr_health = userAPI.fetch_health_status(chat_id)
+    if curr_health > 0.35:
+        msg = "Since you are in a good mood, here are the top action movies to watch\n"
+        movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=28&primary_release_date.gte=2015-01-01&primary_release_date.lte=2016-12-31&with_original_language=en"
+    else:
+        msg = "Since you are in a bad mood, here are the top animation and comedy movies to cheer you up\n"
+        movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=16,35&primary_release_date.gte=2015-01-01&primary_release_date.lte=2016-12-31&with_original_language=en"
+
     comedy = requests.get(movies.format(MOVIES_TOKEN))
     movies_list = ""
     for i in range(10):    
         movies_list += "\t" + (comedy.json()["results"][i]["title"])+" \n\n"
-    movies_msg="Here are the top comedy movies that will definitely to cheer you up! \n" + movies_list
+    movies_msg = msg + movies_list
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, movies_msg))  
 
 def suggest_recipe(activity,args, chat_id, data):
     curr_health = userAPI.fetch_health_status(chat_id)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love" + activity+ " We can suggest a few of our top recipes"))
-    if curr_health < 0.5:
+    if curr_health < 0.35:
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I sense that you are still sad Here are some recipes that can cheer you up!"))
         response=sendRecipe("sweets")
         
@@ -214,9 +228,6 @@ def sendRecipe(query):
 
 
      
-
-
-
 
 def reply_markup_maker(data):
     keyboard = []
