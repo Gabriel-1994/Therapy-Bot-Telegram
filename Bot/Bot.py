@@ -30,7 +30,9 @@ class Bot:
             if user_question_place == 7:
                 self.handlers.get("/suggest_activity")(args,chat_id,data)
             if user_question_place == -1:
-                self.handlers.get("/getIngredient")(args,chat_id,data)    
+                self.handlers.get("/getIngredient")(args,chat_id,data) 
+            if user_question_place == 12:
+                self.handlers.get("/location")(args,chat_id,data)
         except:
             pass
         try:
@@ -47,5 +49,5 @@ def get_bot():
     bot.add_handler("/session", start_session)
     bot.add_handler("/suggest_activity",suggest_activity)
     bot.add_handler("/getIngredient",getIngredient)
-
+    bot.add_handler("/location", get_location_handler)
     return bot

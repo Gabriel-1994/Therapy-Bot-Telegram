@@ -25,11 +25,21 @@ def get_personal_data_handler(args, chat_id, data):
         first_name = data.get('message').get('from').get('first_name')
         last_name = data.get('message').get('from').get('last_name')
         user_id = chat_id
-        user_place = 10
-        userAPI.add_user(user_id, first_name + " " +  last_name, "Jerusalem", 0, user_place)
-        hobbies_handler(args, chat_id, data)
+        user_place = 12
+        userAPI.add_user(user_id, first_name + " " +  last_name, "", 0, user_place)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Where do you live"))
 
-        
+
+
+def get_location_handler(args, chat_id, data):
+    location = data['message']['text']
+    print(location)
+    user_place = 10
+    userAPI.update_question_counter(chat_id,user_place)
+    userAPI.update_location(chat_id,location)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Your location is saved, lets start with your hobbies"))
+    hobbies_handler(args, chat_id, data)
+
 
 def hobbies_handler(args, chat_id, data):
     

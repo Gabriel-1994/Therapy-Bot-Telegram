@@ -60,8 +60,8 @@ def fetch_health_status(userid):#adding another activity
 def update_location(user_id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
     try:
         with connection.cursor() as cursor:
-            query=""" UPDATE userinfo set location=%s WHERE userid= %s """
-            cursor.execute(query,(user_id,location, ))
+            query=""" UPDATE userinfo set userlocation=%s WHERE userid= %s """
+            cursor.execute(query,(location,user_id, ))
             connection.commit()
     except:
        return "ERROR connecting to DATABASE"
