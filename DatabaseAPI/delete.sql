@@ -1,3 +1,3 @@
-use sql_testing;
+use sql_intro;
 delete from activities;
 delete from userinfo;
