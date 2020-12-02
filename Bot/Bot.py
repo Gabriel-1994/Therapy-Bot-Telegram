@@ -20,7 +20,7 @@ class Bot:
         
         try:
             user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
-            if user_question_place < 7 and user_question_place > 0:
+            if user_question_place <= 4 and user_question_place > 0:
                 self.handlers.get("/session")(args, chat_id, data)
                 return
 
@@ -29,8 +29,6 @@ class Bot:
             
             if user_question_place == 7:
                 self.handlers.get("/suggest_activity")(args,chat_id,data)
-            if user_question_place == -1:
-                self.handlers.get("/getIngredient")(args,chat_id,data)    
         except:
             pass
         try:
@@ -46,6 +44,4 @@ def get_bot():
     bot.add_handler("/hobbies", hobbies_handler)
     bot.add_handler("/session", start_session)
     bot.add_handler("/suggest_activity",suggest_activity)
-    bot.add_handler("/getIngredient",getIngredient)
-
     return bot
