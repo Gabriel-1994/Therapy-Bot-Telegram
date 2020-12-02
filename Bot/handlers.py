@@ -17,6 +17,7 @@ def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
         """ not first time user """
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welcome Back " + data.get('message').get('from').get('first_name') + " Nice to see you again"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "To start a new session, type /session"))
         userAPI.update_question_counter(chat_id,1)
 
 
@@ -39,7 +40,7 @@ def get_location_handler(args, chat_id, data):
     userAPI.update_question_counter(chat_id,user_place)
     userAPI.update_location(chat_id,location)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Your location is saved, lets start with your hobbies"))
-    hobbies = ['Video Games', 'Movies', 'Sports', 'Cooking', "End"]
+    hobbies = ['Movies', 'Sports', 'Cooking', "End"]
     reply_markup = reply_markup_maker(hobbies)
     requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "choose your hobby..\n",reply_markup))
 
@@ -56,14 +57,13 @@ def hobbies_handler(args, chat_id, data):
     else:
         if not data['message']['text'] == '/sign_up':
             add_hobbies_handler(args, chat_id, data)
-        hobbies = set(['Video Games', 'Movies', 'Sports', 'Cooking', "End"])
+        hobbies = set(['Movies', 'Sports', 'Cooking', "End"])
         user_hobbies = userAPI.fetch_activity(chat_id)
 
         user_hobbies = set([value['activity'] for value in user_hobbies])
         hobbies = list(hobbies - user_hobbies)
         reply_markup = reply_markup_maker(hobbies)
-        #requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "You can type /hobbies <hobby1,...> \nnow we support" + "\nVideo games\nMovies\nSports\nCooking"))
-        requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Let's start by telling me what your favorite hobbies are: \n",reply_markup))
+        requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "choose your hobby..\n",reply_markup))
 
 def add_hobbies_handler(args, chat_id, data):
     print("IN HOBBIES HANDLER")
@@ -119,8 +119,7 @@ def start_session(args, chat_id, data):
         #fetching health status
         pre_health = userAPI.fetch_health_status(chat_id)
         curr_health = analyzer.analyze_text(data['message']['text'])
-        status = analyzer.compare_mood(pre_health, curr_health)
-        userAPI.update_health_status(chat_id, curr_health)
+        status = analyzer.compare_mood(pre_health, curr_health)        
 
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Aha, I see... That sucks!"))
 
@@ -138,7 +137,6 @@ def start_session(args, chat_id, data):
         print(curr_health)
         status = analyzer.compare_mood(pre_health, curr_health)
         print(status)
-        userAPI.update_health_status(chat_id, curr_health)
 
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Wow! What a great idea!\nTo lighten the mood, here is a joke that always cracked me up (But remember I am a bot lol!)"))
         joke = requests.get("https://official-joke-api.appspot.com/jokes/general/random")
@@ -148,15 +146,12 @@ def start_session(args, chat_id, data):
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, joke.json()[0].get("punchline")))
         time.sleep(5.0)
         userAPI.update_question_counter(chat_id, 7)
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I am very happy because I can sense that the mood is much better than start of our session!"))
         suggest_activity(args, chat_id, data)
         
 
-   
-
 
 def suggest_activity(args, chat_id, data):
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I Would like to also suggest some activities that can put you even in a better mood (Although none of them can ever replace me)"))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here are some activities you can do (Although none of them can replace chatting with me)"))
     activity=userAPI.fetch_one_activity(chat_id).get("activity")
     print(activity)
     if activity=='Sports':
@@ -165,28 +160,27 @@ def suggest_activity(args, chat_id, data):
         suggest_movies(activity,chat_id)
     elif activity=='Cooking':
         suggest_recipe(activity,args,chat_id,data)
-    elif activity=='--':
-        suggest_sport(activity, chat_id)
+
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "See you later, Alligator. After a while, Crocodile"))        
 
     userAPI.update_question_counter(chat_id, 8)
     
      
-
 def suggest_sport(activity,chat_id):
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you do some " + activity))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I suggest you do some " + activity))
     weather = "https://api.weatherbit.io/v2.0/current?city=Jerusalem&key={}"
     temp = requests.get(weather.format(WEATHER_TOKEN))
     temperature = float(temp.json()["data"][0]["temp"])
     if temperature > 15:
         weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"] + "\nYou can go out for a run"
     else:
-        weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
+        weather_msg="Oh no! The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,weather_msg))
 
 def suggest_movies(activity,chat_id):    
     curr_health = userAPI.fetch_health_status(chat_id)
     if curr_health > 0.35:
-        msg = "Since you are in a good mood, here are the top action movies to watch\n"
+        msg = "Since you are in a good mood, here are the top action movies to watch:\n"
         movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=28&primary_release_date.gte=2015-01-01&primary_release_date.lte=2016-12-31&with_original_language=en"
     else:
         msg = "Since you are in a bad mood, here are the top animation and comedy movies to cheer you up\n"
@@ -194,20 +188,20 @@ def suggest_movies(activity,chat_id):
 
     comedy = requests.get(movies.format(MOVIES_TOKEN))
     movies_list = ""
-    for i in range(10):    
-        movies_list += "\t" + (comedy.json()["results"][i]["title"])+" \n\n"
+    for i in range(3):    
+        movies_list += "\t\n" + str(i+1) + ". " + (comedy.json()["results"][i]["title"])
     movies_msg = msg + movies_list
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, movies_msg))  
 
 def suggest_recipe(activity,args, chat_id, data):
     curr_health = userAPI.fetch_health_status(chat_id)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love" + activity+ " We can suggest a few of our top recipes"))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love " + activity+ " I can suggest my most famous recipe"))
     if curr_health < 0.35:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I sense that you are still sad Here are some recipes that can cheer you up!"))
-        response=sendRecipe("sweets")
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here is a recipe that can cheer you up!"))
+        response=sendRecipe("chocolate")
         
     else:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I sense that you are happy I encourgae you to have a healthy meal! Here are some recipes"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here is a recipe for a healthy meal for you to stay in a good mood"))
         response=sendRecipe("healthy")
 
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,response))
@@ -221,8 +215,12 @@ def sendRecipe(query):
     if len(recipes) == 0:
         return "No match"
 
+    i=0
     for r in recipes:
         res_str += "Title: " + r["title"] + "\n\tLink: " + r["href"] + "\n\tIngredients: " + r["ingredients"] + "\n\n"
+        if i==0:
+            break
+        i+=1
     
     return res_str
 
