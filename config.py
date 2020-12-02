@@ -7,5 +7,5 @@ PORT = 5002
 WEEB_HOOK_URL = 'https://45c0297b0b0d.ngrok.io'
 TELEGRAM_INIT_URL = 'https://api.telegram.org/bot{}/setWebhook?url={}/message'.format(TELEGRAM_TOKEN,WEEB_HOOK_URL)
 
-DB = 'sql_testing'
-DB_password = 'Bandi4434!!!'
+DB = 'sql_intro'
+DB_password = '1234'

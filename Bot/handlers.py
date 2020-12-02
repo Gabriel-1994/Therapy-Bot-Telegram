@@ -6,6 +6,7 @@ from telebot import types
 import json
 import DatabaseAPI.userinfoAPI as userAPI
 import DatabaseAPI.questionsAPI as qAPI
+import DatabaseAPI.feeBackAPI as fbAPI
 import analyzer
 
 
@@ -171,8 +172,11 @@ def suggest_activity(args, chat_id, data):
         suggest_recipe(activity,args,chat_id,data)
 
     time.sleep(1.5)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Catch you later, Alligator. After a while, Crocodile"))        
+        
 
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Catch you later, Alligator."))
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Please feel free to send me your feedback by typing /feedback <message>"))        
+    
     userAPI.update_question_counter(chat_id, 8)
     
      
@@ -216,7 +220,7 @@ def suggest_recipe(activity,args, chat_id, data):
         response=sendRecipe("healthy")
     time.sleep(4.0)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,response))
-    userAPI.update_question_counter(chat_id,8)
+    userAPI.update_question_counter(chat_id,20)
 
 def sendRecipe(query):   
     api_url = "http://www.recipepuppy.com/api/?q={}"
@@ -234,6 +238,16 @@ def sendRecipe(query):
         i+=1
     
     return res_str
+
+def feedback_handler(args, chat_id, data):
+    message = data['message']['text'].split(" ", 1)[1]
+    print(message)
+    if args[0] == '/feedback':
+        fbAPI.add_feedBack(chat_id,message)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id,"Thank you for your feedback."))
+
+    userAPI.update_question_counter(chat_id,8) # return to start
+
 
 
      

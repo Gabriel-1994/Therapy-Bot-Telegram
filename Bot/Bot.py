@@ -24,7 +24,7 @@ class Bot:
             return
         except:
             pass
-        
+
         try:
             user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
             if user_question_place <= 5 and user_question_place > 0:
@@ -38,6 +38,10 @@ class Bot:
                 self.handlers.get("/suggest_activity")(args,chat_id,data)
             if user_question_place == 12:
                 self.handlers.get("/location")(args,chat_id,data)
+
+            if user_question_place == 20:
+                self.handlers.get("/feedback")(args,chat_id,data)
+               
         except:
             pass
         
@@ -50,4 +54,5 @@ def get_bot():
     bot.add_handler("/session", start_session)
     bot.add_handler("/suggest_activity",suggest_activity)
     bot.add_handler("/location", get_location_handler)
+    bot.add_handler("/feedback",feedback_handler)
     return bot
