@@ -7,42 +7,49 @@ import json
 import DatabaseAPI.userinfoAPI as userAPI
 import DatabaseAPI.questionsAPI as qAPI
 import analyzer
+
+
 RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=Markdown"
 
-
-
-# "/sign_up"
-
-def build_menu(buttons,n_cols,header_buttons=None,footer_buttons=None):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(0, header_buttons)
-    if footer_buttons:
-        menu.append(footer_buttons)
-    return menu
 
 # "/start"
 def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
-        """ not first time user """
+        # not first time user 
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back " + data.get('message').get('from').get('first_name')))
 
-    #/sign_up
+
     else:
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi there " + data.get('message').get('from').get('first_name')))
         first_name = data.get('message').get('from').get('first_name')
         last_name = data.get('message').get('from').get('last_name')
         user_id = chat_id
-        user_place = 1
+        user_place = 10
         userAPI.add_user(user_id, first_name + " " +  last_name, "Jerusalem", 0, user_place)
         hobbies_handler(args, chat_id, data)
+
         
 
 def hobbies_handler(args, chat_id, data):
-    hobbies = ['Video games', 'Movies', 'Sports', 'Cooking']
-    reply_markup = reply_markup_maker(hobbies)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "You can type /hobbies <hobby1,...> \nnow we support" + "\nVideo games\nMovies\nSports\nCooking"))
-    requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Please reply with your hobbies\n",reply_markup))
+    
+    if data['message']['text'] == 'End':
+            requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Nice, done adding your hobbies\nif you want to start your session you should try to send /session "))
+            user_place = 1
+            userAPI.update_question_counter(chat_id, user_place)
+    else:
+        if not data['message']['text'] == '/sign_up':
+            add_hobbies_handler(args, chat_id, data)
+        hobbies = set(['Video Games', 'Movies', 'Sports', 'Cooking', "End"])
+        user_hobbies = userAPI.fetch_activity(chat_id)
+
+        user_hobbies = set([value['activity'] for value in user_hobbies])
+        print(hobbies)
+        print(user_hobbies)
+        hobbies = list(hobbies - user_hobbies)
+        print(hobbies)
+        reply_markup = reply_markup_maker(hobbies)
+        #requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "You can type /hobbies <hobby1,...> \nnow we support" + "\nVideo games\nMovies\nSports\nCooking"))
+        requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Please reply with your hobbies\n",reply_markup))
 
 def add_hobbies_handler(args, chat_id, data):
     print("IN HOBBIES HANDLER")
@@ -69,14 +76,12 @@ def start_session(args, chat_id, data):
 
         userAPI.update_health_status(chat_id, curr_health)
         
-
-
-
     question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
 
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
     user_question_place +=1
     userAPI.update_question_counter(chat_id, user_question_place)
+
 
 def reply_markup_maker(data):
     keyboard = []

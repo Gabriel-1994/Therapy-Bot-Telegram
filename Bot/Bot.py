@@ -17,15 +17,16 @@ class Bot:
         self.handlers[handler_name] = handler
     
     def action(self,args,chat_id, data):
-        hobbies = ['Video games', 'Movies', 'Sports', 'Cooking']
-        if data['message']['text'] in hobbies:
-            self.handlers.get("/hobbies")(args, chat_id, data)
-            return
+        
         try:
             user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
             if user_question_place < 7 and user_question_place > 0:
                 self.handlers.get("/session")(args, chat_id, data)
                 return
+
+            if user_question_place == 10:
+                self.handlers.get("/hobbies")(args, chat_id, data)
+            
         except:
             pass
         try:
@@ -38,7 +39,7 @@ class Bot:
 def get_bot():
     bot = Bot()
     bot.add_handler("/sign_up", get_personal_data_handler)
-    bot.add_handler("/hobbies", add_hobbies_handler)
+    bot.add_handler("/hobbies", hobbies_handler)
     bot.add_handler("/session", start_session)
 
     return bot
