@@ -1,10 +1,10 @@
 import pymysql
-
+from config import DB, DB_password
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="1234",
-    db="sql_intro",
+    password=DB_password,
+    db=DB,
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )
@@ -60,8 +60,8 @@ def fetch_health_status(userid):#adding another activity
 def update_location(user_id,location):#beginning of every sesssion we can ask where he is or getlocation from telegram??
     try:
         with connection.cursor() as cursor:
-            query=""" UPDATE userinfo set location=%s WHERE userid= %s """
-            cursor.execute(query,(user_id,location, ))
+            query=""" UPDATE userinfo set userlocation=%s WHERE userid= %s """
+            cursor.execute(query,(location,user_id, ))
             connection.commit()
     except:
        return "ERROR connecting to DATABASE"
@@ -78,7 +78,18 @@ def add_activity(userid,activity):#adding another activity
 def fetch_activity(userid):#adding another activity
     try:
         with connection.cursor() as cursor:
-            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND() LIMIT 1"""
+            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND()"""
+            cursor.execute(query,(userid, ))
+            result=cursor.fetchall()
+    except:
+        result = "ERROR connecting to DATABASE"
+    return result
+
+
+def fetch_one_activity(userid):#adding another activity
+    try:
+        with connection.cursor() as cursor:
+            query=""" SELECT activity FROM activities WHERE userid=%s ORDER BY RAND()"""
             cursor.execute(query,(userid, ))
             result=cursor.fetchone()
     except:

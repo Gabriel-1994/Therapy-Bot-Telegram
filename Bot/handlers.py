@@ -1,4 +1,4 @@
-from config import TELEGRAM_TOKEN
+from config import TELEGRAM_TOKEN, WEATHER_TOKEN, MOVIES_TOKEN
 from flask import Response
 import requests
 import time
@@ -7,42 +7,63 @@ import json
 import DatabaseAPI.userinfoAPI as userAPI
 import DatabaseAPI.questionsAPI as qAPI
 import analyzer
+
+
 RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=Markdown"
 
-
-
-# "/sign_up"
-
-def build_menu(buttons,n_cols,header_buttons=None,footer_buttons=None):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(0, header_buttons)
-    if footer_buttons:
-        menu.append(footer_buttons)
-    return menu
 
 # "/start"
 def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
         """ not first time user """
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welecome Back " + data.get('message').get('from').get('first_name')))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welcome Back " + data.get('message').get('from').get('first_name') + " Nice to see you again"))
+        userAPI.update_question_counter(chat_id,1)
 
-    #/sign_up
+
     else:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi there " + data.get('message').get('from').get('first_name')))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Hi " + data.get('message').get('from').get('first_name')+" Welcome to MOODIFIER! \nMy goal is to always lighten your mood and give you a safe space to talk about your problems. " ))
+        time.sleep(1.5)
         first_name = data.get('message').get('from').get('first_name')
         last_name = data.get('message').get('from').get('last_name')
         user_id = chat_id
-        user_place = 1
-        userAPI.add_user(user_id, first_name + " " +  last_name, "Jerusalem", 0, user_place)
-        hobbies_handler(args, chat_id, data)
-        
+        user_place = 12
+        userAPI.add_user(user_id, first_name + " " +  last_name, "", 0, user_place)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Where do you live"))
+
+
+
+def get_location_handler(args, chat_id, data):
+    location = data['message']['text']
+    print(location)
+    user_place = 10
+    userAPI.update_question_counter(chat_id,user_place)
+    userAPI.update_location(chat_id,location)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Your location is saved, lets start with your hobbies"))
+    hobbies = ['Video Games', 'Movies', 'Sports', 'Cooking', "End"]
+    reply_markup = reply_markup_maker(hobbies)
+    requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "choose your hobby..\n",reply_markup))
+
+
 
 def hobbies_handler(args, chat_id, data):
-    hobbies = ['Video games', 'Movies', 'Sports', 'Cooking']
-    reply_markup = reply_markup_maker(hobbies)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "You can type /hobbies <hobby1,...> \nnow we support" + "\nVideo games\nMovies\nSports\nCooking"))
-    requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Please reply with your hobbies\n",reply_markup))
+    
+    if data['message']['text'] == 'End':
+            time.sleep(1.0)
+            requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Great, Now we can start our /session "))
+            time.sleep(1.5)
+            user_place = 1
+            userAPI.update_question_counter(chat_id, user_place)
+    else:
+        if not data['message']['text'] == '/sign_up':
+            add_hobbies_handler(args, chat_id, data)
+        hobbies = set(['Video Games', 'Movies', 'Sports', 'Cooking', "End"])
+        user_hobbies = userAPI.fetch_activity(chat_id)
+
+        user_hobbies = set([value['activity'] for value in user_hobbies])
+        hobbies = list(hobbies - user_hobbies)
+        reply_markup = reply_markup_maker(hobbies)
+        #requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "You can type /hobbies <hobby1,...> \nnow we support" + "\nVideo games\nMovies\nSports\nCooking"))
+        requests.get((RES+ "&reply_markup={}").format(TELEGRAM_TOKEN, chat_id, "Let's start by telling me what your favorite hobbies are: \n",reply_markup))
 
 def add_hobbies_handler(args, chat_id, data):
     print("IN HOBBIES HANDLER")
@@ -51,32 +72,162 @@ def add_hobbies_handler(args, chat_id, data):
 # /session 
 def start_session(args, chat_id, data):
     user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
-    if user_question_place == 1: ## the first_question
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "welecome to our session"))
-        time.sleep(0.5)
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "this session is secret so dont worry no one will know anything about it"))
-        time.sleep(0.5)
-
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Lets Start"))
+    #if user_question_place == 1: ## the first_question
+    if user_question_place == 1:
+        question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
     
-    else:
-        """Analyze what the user typed"""
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
+        user_question_place +=1
+        userAPI.update_question_counter(chat_id, user_question_place)
+        return
+    elif user_question_place == 2:
+        
+        #pre_health = userAPI.fetch_health_status(chat_id)
+        curr_health = analyzer.analyze_text(data['message']['text'])
+        #status = analyzer.compare_mood(pre_health, curr_health)
+        userAPI.update_health_status(chat_id, curr_health)
+        status1 = analyzer.get_highest_two_emotions(data['message']['text'])
+        if status1 == "Happy" or status1 == "Excited":
+            happy_gif = "https://i.gifer.com/1fQT.mp4"
+            requests.get(RES.format(TELEGRAM_TOKEN, chat_id, happy_gif))
+            time.sleep(1.5)                
+            requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I'm very happy to hear that you are " + status1))
+            user_question_place = 7
+            userAPI.update_question_counter(chat_id, user_question_place)
+
+            suggest_activity(args, chat_id, data)
+            return
+
+
+        #shocked gif 
+        gif = "https://thumbs.gfycat.com/AmazingGiftedGnu-mobile.mp4"
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, gif))
+        
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I'm very sorry to hear that! \nI am sensing that you are: " + status1))
+        #second question
+        question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
+        user_question_place +=1
+        userAPI.update_question_counter(chat_id, user_question_place)
+        return
+    elif user_question_place == 3:
+        #motivation
+        question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
+        user_question_place +=1
+        userAPI.update_question_counter(chat_id, user_question_place)
+        
+        #fetching health status
         pre_health = userAPI.fetch_health_status(chat_id)
         curr_health = analyzer.analyze_text(data['message']['text'])
-
         status = analyzer.compare_mood(pre_health, curr_health)
-        
-
         userAPI.update_health_status(chat_id, curr_health)
+
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Aha, I see... That sucks!"))
+
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Just remeber that " + question))
+        time.sleep(1.0)
+
+        #third question
+        question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
+        return
+    elif user_question_place == 4 :
+        pre_health = userAPI.fetch_health_status(chat_id)
+        print(pre_health)
+        curr_health = analyzer.analyze_text(data['message']['text'])
+        print(curr_health)
+        status = analyzer.compare_mood(pre_health, curr_health)
+        print(status)
+        userAPI.update_health_status(chat_id, curr_health)
+
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Wow! What a great idea!\nTo lighten the mood, here is a joke that always cracked me up (But remember I am a bot lol!)"))
+        joke = requests.get("https://official-joke-api.appspot.com/jokes/general/random")
+        time.sleep(0.5)    
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, joke.json()[0].get("setup")))
+        time.sleep(5.0)    
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, joke.json()[0].get("punchline")))
+        time.sleep(5.0)
+        userAPI.update_question_counter(chat_id, 7)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I am very happy because I can sense that the mood is much better than start of our session!"))
+        suggest_activity(args, chat_id, data)
         
 
+   
 
 
-    question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
+def suggest_activity(args, chat_id, data):
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I Would like to also suggest some activities that can put you even in a better mood (Although none of them can ever replace me)"))
+    activity=userAPI.fetch_one_activity(chat_id).get("activity")
+    print(activity)
+    if activity=='Sports':
+        suggest_sport(activity,chat_id)
+    elif activity=='Movies':
+        suggest_movies(activity,chat_id)
+    elif activity=='Cooking':
+        suggest_recipe(activity,args,chat_id,data)
+    elif activity=='--':
+        suggest_sport(activity, chat_id)
 
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
-    user_question_place +=1
-    userAPI.update_question_counter(chat_id, user_question_place)
+    userAPI.update_question_counter(chat_id, 8)
+    
+     
+
+def suggest_sport(activity,chat_id):
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "We suggest you do some " + activity))
+    weather = "https://api.weatherbit.io/v2.0/current?city=Jerusalem&key={}"
+    temp = requests.get(weather.format(WEATHER_TOKEN))
+    temperature = float(temp.json()["data"][0]["temp"])
+    if temperature > 15:
+        weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"] + "\nYou can go out for a run"
+    else:
+        weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id,weather_msg))
+
+def suggest_movies(activity,chat_id):    
+    curr_health = userAPI.fetch_health_status(chat_id)
+    if curr_health > 0.35:
+        msg = "Since you are in a good mood, here are the top action movies to watch\n"
+        movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=28&primary_release_date.gte=2015-01-01&primary_release_date.lte=2016-12-31&with_original_language=en"
+    else:
+        msg = "Since you are in a bad mood, here are the top animation and comedy movies to cheer you up\n"
+        movies = "https://api.themoviedb.org/3/discover/movie?api_key={}&language=en-US&sort_by=revenue.desc&include_adult=false&include_video=false&page=1&with_genres=16,35&primary_release_date.gte=2015-01-01&primary_release_date.lte=2016-12-31&with_original_language=en"
+
+    comedy = requests.get(movies.format(MOVIES_TOKEN))
+    movies_list = ""
+    for i in range(10):    
+        movies_list += "\t" + (comedy.json()["results"][i]["title"])+" \n\n"
+    movies_msg = msg + movies_list
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, movies_msg))  
+
+def suggest_recipe(activity,args, chat_id, data):
+    curr_health = userAPI.fetch_health_status(chat_id)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love" + activity+ " We can suggest a few of our top recipes"))
+    if curr_health < 0.35:
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I sense that you are still sad Here are some recipes that can cheer you up!"))
+        response=sendRecipe("sweets")
+        
+    else:
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I sense that you are happy I encourgae you to have a healthy meal! Here are some recipes"))
+        response=sendRecipe("healthy")
+
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id,response))
+    userAPI.update_question_counter(chat_id,8)
+
+def sendRecipe(query):   
+    api_url = "http://www.recipepuppy.com/api/?q={}"
+    recipes = requests.get(api_url.format(query)).json()["results"]
+    res_str = ""
+
+    if len(recipes) == 0:
+        return "No match"
+
+    for r in recipes:
+        res_str += "Title: " + r["title"] + "\n\tLink: " + r["href"] + "\n\tIngredients: " + r["ingredients"] + "\n\n"
+    
+    return res_str
+
+
+     
 
 def reply_markup_maker(data):
     keyboard = []
