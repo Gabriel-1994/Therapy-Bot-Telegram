@@ -16,7 +16,8 @@ RES = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}&parse_mode=
 def get_personal_data_handler(args, chat_id, data):
     if userAPI.search_user(chat_id):
         """ not first time user """
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welcome Back " + data.get('message').get('from').get('first_name') + " Nice to see you again"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Welcome back " + data.get('message').get('from').get('first_name') + "!\n" + "Nice to see you again!"))
+        time.sleep(1.0)
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "To start a new session, type /session"))
         userAPI.update_question_counter(chat_id,1)
 
@@ -92,6 +93,7 @@ def start_session(args, chat_id, data):
             requests.get(RES.format(TELEGRAM_TOKEN, chat_id, happy_gif))
             time.sleep(1.5)                
             requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I'm very happy to hear that you are " + status1))
+            time.sleep(1.5)
             user_question_place = 7
             userAPI.update_question_counter(chat_id, user_question_place)
 
@@ -102,8 +104,10 @@ def start_session(args, chat_id, data):
         #shocked gif 
         gif = "https://thumbs.gfycat.com/AmazingGiftedGnu-mobile.mp4"
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, gif))
+        time.sleep(1.5)
         
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I'm very sorry to hear that! \nI am sensing that you are: " + status1))
+        time.sleep(2.0)
         #second question
         question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, question))
@@ -122,9 +126,9 @@ def start_session(args, chat_id, data):
         status = analyzer.compare_mood(pre_health, curr_health)        
 
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Aha, I see... That sucks!"))
-
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Just remeber that " + question))
         time.sleep(1.0)
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Just remeber " + question))
+        time.sleep(3.0)
 
         #third question
         question = qAPI.get_question_by_categoryID_randomly(user_question_place).get('question')
@@ -145,6 +149,10 @@ def start_session(args, chat_id, data):
         time.sleep(5.0)    
         requests.get(RES.format(TELEGRAM_TOKEN, chat_id, joke.json()[0].get("punchline")))
         time.sleep(5.0)
+        userAPI.update_question_counter(chat_id, 5)
+        return 
+    elif user_question_place == 5:
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I know, I'm hilarious lol\n"))
         userAPI.update_question_counter(chat_id, 7)
         suggest_activity(args, chat_id, data)
         
@@ -154,6 +162,7 @@ def suggest_activity(args, chat_id, data):
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here are some activities you can do (Although none of them can replace chatting with me)"))
     activity=userAPI.fetch_one_activity(chat_id).get("activity")
     print(activity)
+    time.sleep(2.0)
     if activity=='Sports':
         suggest_sport(activity,chat_id)
     elif activity=='Movies':
@@ -161,23 +170,26 @@ def suggest_activity(args, chat_id, data):
     elif activity=='Cooking':
         suggest_recipe(activity,args,chat_id,data)
 
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "See you later, Alligator. After a while, Crocodile"))        
+    time.sleep(1.5)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Catch you later, Alligator. After a while, Crocodile"))        
 
     userAPI.update_question_counter(chat_id, 8)
     
      
 def suggest_sport(activity,chat_id):
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "I suggest you do some " + activity))
+    time.sleep(1.0)
+    requests.get(RES.format(TELEGRAM_TOKEN, chat_id,"I suggest you do some " + activity))
     weather = "https://api.weatherbit.io/v2.0/current?city=Jerusalem&key={}"
     temp = requests.get(weather.format(WEATHER_TOKEN))
     temperature = float(temp.json()["data"][0]["temp"])
     if temperature > 15:
         weather_msg="The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"] + "\nYou can go out for a run"
     else:
-        weather_msg="Oh no! The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
+        weather_msg="Oh no! It seems like it's a bit cold outside. The weather in your city is currently " + str(temp.json()["data"][0]["temp"]) + " Degrees with "+temp.json()["data"][0]["weather"]["description"]+ "\nYou can do yoga at home"
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,weather_msg))
 
-def suggest_movies(activity,chat_id):    
+def suggest_movies(activity,chat_id):
+    time.sleep(1.0)    
     curr_health = userAPI.fetch_health_status(chat_id)
     if curr_health > 0.35:
         msg = "Since you are in a good mood, here are the top action movies to watch:\n"
@@ -195,15 +207,14 @@ def suggest_movies(activity,chat_id):
 
 def suggest_recipe(activity,args, chat_id, data):
     curr_health = userAPI.fetch_health_status(chat_id)
-    requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love " + activity+ " I can suggest my most famous recipe"))
     if curr_health < 0.35:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here is a recipe that can cheer you up!"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love " + activity+ " Here is my most famous recipe to cheer you up!"))
         response=sendRecipe("chocolate")
         
     else:
-        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here is a recipe for a healthy meal for you to stay in a good mood"))
+        requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Since you love " + activity+ " Here is my most famous recipe for a healthy meal for you to stay in a good mood"))
         response=sendRecipe("healthy")
-
+    time.sleep(4.0)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id,response))
     userAPI.update_question_counter(chat_id,8)
 

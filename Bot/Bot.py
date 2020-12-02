@@ -27,7 +27,7 @@ class Bot:
         
         try:
             user_question_place = int(userAPI.fetch_Qcounter(chat_id).get('quest_counter'))
-            if user_question_place <= 4 and user_question_place > 0:
+            if user_question_place <= 5 and user_question_place > 0:
                 self.handlers.get("/session")(args, chat_id, data)
                 return
 
