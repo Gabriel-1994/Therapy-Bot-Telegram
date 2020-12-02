@@ -1,10 +1,11 @@
 import pymysql
+from config import DB, DB_password
 
 connection = pymysql.connect(
     host="localhost",
     user="root",
-    password="password",
-    db="questions",
+    password=DB_password,
+    db=DB,
     charset="utf8",
     cursorclass=pymysql.cursors.DictCursor
 )

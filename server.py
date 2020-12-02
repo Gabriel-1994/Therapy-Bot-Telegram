@@ -34,4 +34,4 @@ def message_handler():
 if __name__ == '__main__':
     requests.get(TELEGRAM_INIT_URL)
     bot = get_bot()
-    app.run(port=5002)
+    app.run(port=PORT)

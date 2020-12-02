@@ -1,4 +1,4 @@
-from config import *
+from config import TELEGRAM_TOKEN, WEATHER_TOKEN, MOVIES_TOKEN
 from flask import Response
 import requests
 import time
@@ -92,7 +92,7 @@ def suggest_activity(args, chat_id, data):
     time.sleep(1)
     requests.get(RES.format(TELEGRAM_TOKEN, chat_id, "Here are some suggestions for activites to do that can help you to be in a better mood"))
     time.sleep(1)
-    activity=userAPI.fetch_activity(chat_id).get("activity")
+    activity=userAPI.fetch_one_activity(chat_id).get("activity")
     print(activity)
     if activity=='Sports':
         suggest_sport(activity,chat_id)
@@ -101,7 +101,9 @@ def suggest_activity(args, chat_id, data):
     elif activity=='Cooking':
         suggest_recipe(activity,args,chat_id,data)
     elif activity=='--':
-        suggest_sport(activity)
+        suggest_sport(activity, chat_id)
+
+    userAPI.update_question_counter(chat_id, 1)
     
      
 
